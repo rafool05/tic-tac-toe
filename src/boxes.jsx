@@ -16,7 +16,7 @@ const useGameStore = create((set) => ({
     }));
   },
   clearHistory: () => {
-    set(() => ({
+    set((state) => ({
       ...state,
       history: [Array(9).fill(null)],
       curIdx: 0,
