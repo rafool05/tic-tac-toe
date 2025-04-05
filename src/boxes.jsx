@@ -1,5 +1,5 @@
 import { create } from "zustand";
-
+import { useShallow } from "zustand/react/shallow"
 const useGameStore = create((set) => ({
   curIdx: 0,
   history: [Array(9).fill(null)],
@@ -47,6 +47,42 @@ function Square({ value, onSquareClick }) {
 }
 
 function Board() {
+  
+  const curIdx = useGameStore((state) => state.curIdx);
+  const history = useGameStore((state) => state.history);
+  const setIdx = useGameStore((state) => state.setIdx);
+  const setHistory = useGameStore((state) => state.setHistory);
+  const clearHistory = useGameStore((state) => state.clearHistory);
+  let squares = history[curIdx];
+  const isX = curIdx % 2 == 0;
+  const winner = calcWinner();
+  const curPlayer = isX ? "X" : "O";
+  const turns = squares.filter((square) => !square).length;
+  const status = statusTeller();
+  return (
+    <div>
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(3, 1fr)",
+          gridTemplateRows: "repeat(3, 1fr)",
+          width: "calc(3 * 2.5rem)",
+          height: "calc(3 * 2.5rem)",
+          border: "1px solid #999",
+        }}
+      >
+        {squares.map((square, squareIndex) => (
+          <Square
+            key={squareIndex}
+            value={square}
+            onSquareClick={() => handleClick(squareIndex)}
+          />
+        ))}
+      </div>
+      <p>{status}</p>
+      
+    </div>
+  );
   function handleClick(i) {
     if (squares[i] || winner) return;
     const nextSquares = squares.slice();
@@ -82,6 +118,8 @@ function Board() {
     if (!turns) return "Draw";
     return "next turn : " + curPlayer;
   }
+}
+function Buttons(){
   function undo() {
     if (!curIdx) return;
     setIdx(curIdx - 1);
@@ -90,38 +128,21 @@ function Board() {
     if (curIdx === history.length - 1) return;
     setIdx(curIdx + 1);
   }
-  const { curIdx, history, setIdx, setHistory, clearHistory } = useGameStore();
-  let squares = history[curIdx];
-  const isX = curIdx % 2 == 0;
-  const winner = calcWinner();
-  const curPlayer = isX ? "X" : "O";
-  const turns = squares.filter((square) => !square).length;
-  const status = statusTeller();
-  return (
-    <div>
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(3, 1fr)",
-          gridTemplateRows: "repeat(3, 1fr)",
-          width: "calc(3 * 2.5rem)",
-          height: "calc(3 * 2.5rem)",
-          border: "1px solid #999",
-        }}
-      >
-        {squares.map((square, squareIndex) => (
-          <Square
-            key={squareIndex}
-            value={square}
-            onSquareClick={() => handleClick(squareIndex)}
-          />
-        ))}
-      </div>
-      <p>{status}</p>
-      <button onClick={() => clearHistory()}>Clear</button>
-      <button onClick={() => undo()}>Undo</button>
-      <button onClick={() => redo()}>Redo</button>
-    </div>
-  );
+  const clearHistory = useGameStore(useShallow((state) => state.clearHistory))
+  const curIdx = useGameStore(useShallow((state) => state.curIdx))
+  const setIdx = useGameStore(useShallow((state) => state.setIdx))
+  const history = useGameStore(useShallow((state) => state.history))
+  return (<>
+    <button onClick={() => clearHistory()}>Clear</button>
+    <button onClick={() => undo()}>Undo</button>
+    <button onClick={() => redo()}>Redo</button>
+  </>)
 }
-export { Board };
+function Game(){
+  return (<div>
+    <Board></Board>
+    <Buttons></Buttons>
+  </div>)
+}
+
+export { Game };
